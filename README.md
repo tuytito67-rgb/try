@@ -1,6 +1,4 @@
-Here is the complete and corrected `README.md` file, fully compatible with **Runme Notebooks**:
 
-```markdown
 # Pixie Observability Setup on Kubernetes
 
 This guide walks you through setting up a self-hosted Pixie environment inside your Kubernetes cluster.
@@ -93,5 +91,4 @@ echo "=================================================="
 echo "🌐 Forwarding Pixie Web UI to 0.0.0.0:8080..."
 echo "=================================================="
 kubectl port-forward --address 0.0.0.0 svc/cloud-proxy-service -n plc 8080:443
-```
 ```
