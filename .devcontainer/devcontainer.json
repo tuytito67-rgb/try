@@ -1,12 +1,24 @@
 {
-    "name": "Kubernetes & Pixie Dev Environment",
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-    "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-            "version": "latest",
-            "minikubeVersion": "latest"
-        }
+  "name": "Kubernetes & Pixie Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
     },
-    "postCreateCommand": "minikube start --driver=docker"
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "minikube": "latest",
+      "helm": "latest",
+      "kubectl": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "stateful.runme"
+      ]
+    }
+  },
+  "postCreateCommand": "minikube delete --all --purge 2>/dev/null || true && minikube start --driver=docker --wait=all"
 }
