@@ -1,7 +1,7 @@
 
 # Pixie Observability Setup on Minikube
 
-This guide walks you through setting up Pixie Observability in your Minikube cluster using the official Pixie Helm repository and CLI.
+This guide walks you through setting up a self-hosted Pixie Control Plane (Pixie Cloud) and Data Plane (Pixie Vizier) on a Minikube cluster.
 
 ---
 
@@ -77,15 +77,20 @@ kubectl get pods -A | grep -E "px-operator|pixie" || kubectl get pods -A
 
 ---
 
-### Step 4: Deploy Pixie Vizier (eBPF Agents)
+### Step 4: Deploy Pixie Vizier (eBPF Agents to Self-Hosted Cloud)
 
-Deploy Pixie Vizier eBPF agents into your Minikube cluster:
+Deploy Pixie Vizier agents and explicitly connect them to your local Self-Hosted Pixie Cloud:
 
 ```sh {"terminalRows":"15"}
 echo "=================================================="
-echo "🚀 Deploying Pixie Vizier via CLI..."
+echo "🚀 Deploying Pixie Vizier to Local Self-Hosted Cloud..."
 echo "=================================================="
-px deploy
+
+px deploy \
+  --cloud_addr=cloud-proxy-service.plc.svc.cluster.local:443 \
+  --use_direct_connection \
+  --use_testing_certs \
+  -y
 
 echo ""
 echo "=================================================="
@@ -104,10 +109,12 @@ kubectl get pods -n pl
 px live px/cluster
 ```
 
-#### Option B: Open Pixie Web Dashboard
+#### Option B: Access Self-Hosted Web Dashboard
+Forward the local cloud proxy service to access your self-hosted Pixie Web UI at `https://localhost:8080`:
+
 ```sh {"terminalRows":"10"}
 echo "=================================================="
-echo "🌐 Opening Pixie Console..."
+echo "🌐 Forwarding Pixie Web UI to https://localhost:8080..."
 echo "=================================================="
-px auth login
+kubectl port-forward -n plc svc/cloud-proxy-service 8080:443 --address 0.0.0.0
 ```
