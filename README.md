@@ -1,7 +1,7 @@
 
 # Pixie Observability Setup on Minikube
 
-This guide details the deployment of a self-hosted Pixie Control Plane (Pixie Cloud) and eBPF Data Plane (Pixie Vizier) on a local Minikube cluster based on official documentation.
+This guide walks you through setting up Pixie Observability in your Minikube cluster using the official Pixie Helm repository and CLI.
 
 ---
 
@@ -48,51 +48,48 @@ kubectl cluster-info
 
 ---
 
-### Step 3: Deploy Pixie Cloud (Control Plane)
+### Step 3: Add Official Pixie Helm Repository & Deploy Operator
 
-Deploy the self-hosted Pixie Cloud control plane services into the `plc` namespace using Helm:
+Add the official Pixie Helm Chart repository and install/upgrade the Pixie Operator:
 
 ```sh {"terminalRows":"15"}
 echo "=================================================="
-echo "🚀 Adding Pixie Official Helm Repository..."
+echo "🚀 Adding Official Pixie Helm Repository..."
 echo "=================================================="
-helm repo add pixie https://pixie-io.github.io/pixie
+helm repo add pixie-operator https://pixie-operator-charts.storage.googleapis.com
 helm repo update
 
 echo ""
 echo "=================================================="
-echo "📦 Deploying Pixie Cloud into namespace 'plc'..."
+echo "📦 Deploying Pixie Operator in namespace 'pixie'..."
 echo "=================================================="
-helm install pixie-cloud pixie/pixie-cloud \
-  --namespace plc \
-  --create-namespace \
-  --set devMode=true
+helm upgrade --install pixie-operator pixie-operator/pixie-operator-chart \
+  --namespace pixie \
+  --create-namespace
 
 echo ""
 echo "=================================================="
-echo "⏳ Waiting for Pixie Cloud Pods to Initialize..."
+echo "⏳ Waiting for Pixie Operator Resources to Initialize..."
 echo "=================================================="
-kubectl wait --for=condition=ready pod -l app=cloud-proxy -n plc --timeout=300s || kubectl get pods -n plc
+sleep 10
+kubectl get pods -A | grep -E "px-operator|pixie" || kubectl get pods -A
 ```
 
 ---
 
-### Step 4: Deploy Pixie Vizier (Data Plane / eBPF Agents)
+### Step 4: Deploy Pixie Vizier (eBPF Agents)
 
-Deploy Pixie Vizier into the `pl` namespace and connect eBPF collectors to your local Pixie Cloud instance:
+Deploy Pixie Vizier eBPF agents into your Minikube cluster:
 
 ```sh {"terminalRows":"15"}
 echo "=================================================="
-echo "🚀 Deploying Pixie Vizier eBPF Agents..."
+echo "🚀 Deploying Pixie Vizier via CLI..."
 echo "=================================================="
-px deploy \
-  --cloud_addr=cloud-proxy-service.plc.svc.cluster.local:443 \
-  --use_direct_connection \
-  --use_testing_certs
+px deploy
 
 echo ""
 echo "=================================================="
-echo "✅ Checking Pixie Vizier Agents Status..."
+echo "✅ Checking Pixie Vizier Pods Status..."
 echo "=================================================="
 kubectl get pods -n pl
 ```
@@ -107,12 +104,10 @@ kubectl get pods -n pl
 px live px/cluster
 ```
 
-#### Option B: Access Pixie Dashboard (Web UI)
-Forward the local cloud proxy service to access the Pixie UI at `https://localhost:8080`:
-
+#### Option B: Open Pixie Web Dashboard
 ```sh {"terminalRows":"10"}
 echo "=================================================="
-echo "🌐 Forwarding Pixie Web UI to https://localhost:8080..."
+echo "🌐 Opening Pixie Console..."
 echo "=================================================="
-kubectl port-forward -n plc svc/cloud-proxy-service 8080:443 --address 0.0.0.0
+px auth login
 ```
