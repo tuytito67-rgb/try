@@ -1,4 +1,3 @@
-
 # Pixie Observability Setup on Minikube
 
 This guide walks you through setting up a self-hosted Pixie Control Plane (Pixie Cloud) and Data Plane (Pixie Vizier) on a Minikube cluster.
@@ -77,7 +76,37 @@ kubectl get pods -A | grep -E "px-operator|pixie" || kubectl get pods -A
 
 ---
 
-### Step 4: Deploy Pixie Vizier (eBPF Agents to Self-Hosted Cloud)
+### Step 4: Authenticate CLI Against Self-Hosted Cloud
+
+`px deploy` fails with "You must be logged in" if the CLI has no session token for your cloud instance. Generate an API key from your self-hosted Pixie Cloud admin UI (or via an existing authenticated session) and export it, then log in non-interactively:
+
+```sh {"terminalRows":"15"}
+echo "=================================================="
+echo "🔑 Authenticating Pixie CLI against Self-Hosted Cloud..."
+echo "=================================================="
+
+export PL_CLOUD_ADDR=cloud-proxy-service.plc.svc.cluster.local:443
+export PL_TESTING_ENV=dev
+
+# PX_API_KEY must be exported beforehand, e.g.:
+# export PX_API_KEY="px-api-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+if [ -z "$PX_API_KEY" ]; then
+  echo "❌ PX_API_KEY is not set. Generate one from the Pixie Cloud admin UI and export it first."
+  exit 1
+fi
+
+px auth login --api_key="$PX_API_KEY"
+
+echo ""
+echo "=================================================="
+echo "✅ Verifying Authenticated Session..."
+echo "=================================================="
+px get viziers || echo "No viziers deployed yet (expected on first run)."
+```
+
+---
+
+### Step 5: Deploy Pixie Vizier (eBPF Agents to Self-Hosted Cloud)
 
 Deploy Pixie Vizier agents and explicitly connect them to your local Self-Hosted Pixie Cloud:
 
@@ -85,6 +114,9 @@ Deploy Pixie Vizier agents and explicitly connect them to your local Self-Hosted
 echo "=================================================="
 echo "🚀 Deploying Pixie Vizier to Local Self-Hosted Cloud..."
 echo "=================================================="
+
+export PL_CLOUD_ADDR=cloud-proxy-service.plc.svc.cluster.local:443
+export PL_TESTING_ENV=dev
 
 px deploy \
   --cloud_addr=cloud-proxy-service.plc.svc.cluster.local:443 \
@@ -101,7 +133,7 @@ kubectl get pods -n pl
 
 ---
 
-### Step 5: Verify & Access Pixie Telemetry
+### Step 6: Verify & Access Pixie Telemetry
 
 #### Option A: Stream Telemetry via CLI (TUI)
 ```sh
