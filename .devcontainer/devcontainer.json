@@ -5,13 +5,13 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
       "enableNonRootDocker": "true",
-      "moby": false
+      "moby": false,
+      "disableIp6tables": true
     },
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "version": "latest",
       "minikube": "latest",
-      "helm": "latest",
-      "kubectl": "latest"
+      "helm": "latest"
     }
   },
   "customizations": {
@@ -21,5 +21,5 @@
       ]
     }
   },
-  "postCreateCommand": "echo here"
+  "postCreateCommand": "MTU=$(cat /sys/class/net/eth0/mtu 2>/dev/null || echo 1400) && docker network create -d bridge -o com.docker.network.driver.mtu=$MTU minikube 2>/dev/null; echo \"minikube network ready with MTU=$MTU\""
 }
